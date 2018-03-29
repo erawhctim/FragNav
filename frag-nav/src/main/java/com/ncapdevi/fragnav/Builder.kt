@@ -13,6 +13,7 @@ class Builder(private val savedInstanceState: Bundle?, val fragmentManager: Frag
     internal var defaultTransactionOptions: FragNavTransactionOptions? = null
     internal var numberOfTabs = 0
     internal var rootFragments: List<Fragment>? = null
+    internal var delayInit: Boolean = false
 
     @FragNavController.TabIndex
     internal var selectedTabIndex = FragNavController.TAB1
@@ -86,9 +87,11 @@ class Builder(private val savedInstanceState: Bundle?, val fragmentManager: Frag
 
     /**
      * @param transactionListener A listener to be implemented (typically within the main activity) to fragment transactions (including tab switches)
+     * @param delayInit Set this to true if you want to avoid the [build] method calling [FragNavController.initialize] and instead call it yourself.
      */
-    fun transactionListener(transactionListener: FragNavController.TransactionListener): Builder {
+    fun transactionListener(transactionListener: FragNavController.TransactionListener, delayInit: Boolean = false): Builder {
         this.transactionListener = transactionListener
+        this.delayInit = delayInit
         return this
     }
 

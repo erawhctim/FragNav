@@ -74,7 +74,9 @@ class FragNavController internal constructor(builder: Builder, savedInstanceStat
                 fragmentStacksTags.add(Stack())
             }
 
-            initialize(currentStackIndex)
+            if (!builder.delayInit) {
+                initialize(currentStackIndex)
+            }
         } else {
             fragNavTabHistoryController.restoreFromBundle(savedInstanceState)
         }
