@@ -254,14 +254,20 @@ class FragNavController constructor(private val fragmentManger: FragmentManager,
     }
 
     @Throws(IndexOutOfBoundsException::class)
-    private fun switchTabInternal(@TabIndex index: Int, transactionOptions: FragNavTransactionOptions?) {
+    private fun switchTabInternal(
+        @TabIndex index: Int,
+        transactionOptions: FragNavTransactionOptions?,
+        allowSwitchingToCurrentIndex: Boolean = false
+    ) {
         //Check to make sure the tab is within range
         if (index >= fragmentStacksTags.size) {
             throw IndexOutOfBoundsException("Can't switch to a tab that hasn't been initialized, " +
                     "Index : " + index + ", current stack size : " + fragmentStacksTags.size +
                     ". Make sure to create all of the tabs you need in the Constructor or provide a way for them to be created via RootFragmentListener.")
         }
-        if (currentStackIndex != index) {
+        // Allows us to call 'switchTabInternal' with a tab index that's
+        // currently selected and override the default behavior
+        if (allowSwitchingToCurrentIndex || currentStackIndex != index) {
             val ft = createTransactionWithOptions(transactionOptions, index < currentStackIndex)
             removeCurrentFragment(ft, shouldDetachAttachOnSwitch(), shouldRemoveAttachOnSwitch())
 
@@ -420,6 +426,84 @@ class FragNavController constructor(private val fragmentManger: FragmentManager,
             commitTransaction(ft, transactionOptions)
             mCurrentFrag = fragment
             transactionListener?.onFragmentTransaction(currentFrag, TransactionType.POP)
+        }
+    }
+
+    /**
+     * Resets the current stack and recreates it with the current fragment, meaning the current
+     * fragment is now the root and the stack size is 1.
+     *
+     * Example:
+     * - Previous Stack = 1 -> 2 -> 3 (size = 3)
+     * - After reset: 3 (size = 1)
+     */
+    fun reinitializeStackWithCurrentFragment() {
+        if (currentStackIndex == NO_TAB) {
+            return
+        }
+
+        //Grab Current stack
+        val fragmentStack = fragmentStacksTags[currentStackIndex]
+
+        if (fragmentStack.size <= 1) {
+            return
+        }
+
+        val fragmentTagsToRemove = fragmentStack.take(fragmentStack.size - 1)
+        val fragmentTagToSave = fragmentStack.lastElement()
+
+        fragmentTagsToRemove.forEach { tag ->
+            val fragment = fragmentManger.findFragmentByTag(tag)
+
+            if (fragment != null) {
+                fragmentManger.beginTransaction()
+                    .remove(fragment)
+                    .commit()
+            }
+        }
+
+        fragmentStacksTags[currentStackIndex] = Stack<String>().apply { push(fragmentTagToSave) }
+    }
+
+    /**
+     * Completely empties the fragment/tag stack at the provided index and removes all fragments,
+     * then reinitializes the stack with the default fragment
+     * (via [RootFragmentListener.getRootFragment])
+     *
+     * **Note**: This is different than [clearStack], which clears out all the fragments in the
+     * stack except for the root, so there is only 1.
+     */
+    fun emptyStackAndReinitialize(stackIndex: Int) {
+        if (stackIndex == NO_TAB) {
+            return
+        }
+
+        //Grab Current stack
+        val fragmentStack = fragmentStacksTags[stackIndex]
+        fragmentStacksTags[stackIndex] = Stack()
+
+        //Pop all of the fragments on the stack and remove them from the FragmentManager
+        while (fragmentStack.size > 0) {
+            val fragment = fragmentManger.findFragmentByTag(fragmentStack.pop())
+            val ft = fragmentManger.beginTransaction()
+
+            if (fragment != null) {
+                ft.remove(fragment)
+            }
+
+            ft.runOnCommit {
+                if (stackIndex >= 0 && stackIndex < fragmentStacksTags.size && stackIndex == currentStackIndex) {
+                    // If we're on the current tab, force the controller to reset
+                    // the current tab's fragments and recreate the stack
+                    switchTabInternal(
+                        index = stackIndex,
+                        transactionOptions = null,
+                        allowSwitchingToCurrentIndex = true
+                    )
+                }
+            }
+
+            ft.commit()
         }
     }
 
