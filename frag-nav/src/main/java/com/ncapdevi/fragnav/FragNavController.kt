@@ -265,6 +265,7 @@ class FragNavController constructor(private val fragmentManger: FragmentManager,
                     "Index : " + index + ", current stack size : " + fragmentStacksTags.size +
                     ". Make sure to create all of the tabs you need in the Constructor or provide a way for them to be created via RootFragmentListener.")
         }
+        
         // Allows us to call 'switchTabInternal' with a tab index that's
         // currently selected and override the default behavior
         if (allowSwitchingToCurrentIndex || currentStackIndex != index) {
