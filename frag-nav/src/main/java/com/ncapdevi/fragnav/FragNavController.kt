@@ -254,10 +254,24 @@ class FragNavController constructor(private val fragmentManger: FragmentManager,
     }
 
     @Throws(IndexOutOfBoundsException::class)
+    @JvmOverloads
+    fun switchTabAndAddFragment(fragment: Fragment, @TabIndex index: Int, transactionOptions: FragNavTransactionOptions? = defaultTransactionOptions) {
+        switchTabInternal(index = index, transactionOptions = transactionOptions, destinationFragmentToAdd = fragment)
+    }
+
+    @Throws(IndexOutOfBoundsException::class)
+    @JvmOverloads
+    fun switchTabWithNewBaseFragment(fragment: Fragment, @TabIndex index: Int, transactionOptions: FragNavTransactionOptions? = defaultTransactionOptions) {
+        switchTabInternal(index = index, transactionOptions = transactionOptions, newBaseFragment = fragment)
+    }
+
+    @Throws(IndexOutOfBoundsException::class)
     private fun switchTabInternal(
         @TabIndex index: Int,
         transactionOptions: FragNavTransactionOptions?,
-        allowSwitchingToCurrentIndex: Boolean = false
+        allowSwitchingToCurrentIndex: Boolean = false,
+        destinationFragmentToAdd: Fragment? = null,
+        newBaseFragment: Fragment? = null
     ) {
         //Check to make sure the tab is within range
         if (index >= fragmentStacksTags.size) {
@@ -276,16 +290,22 @@ class FragNavController constructor(private val fragmentManger: FragmentManager,
 
             fragNavTabHistoryController.switchTab(index)
 
-            var fragment: Fragment? = null
             if (index == NO_TAB) {
                 commitTransaction(ft, transactionOptions)
             } else {
-                //Attempt to reattach previous fragment
-                fragment = addPreviousFragment(ft, shouldDetachAttachOnSwitch() || shouldRemoveAttachOnSwitch())
-                commitTransaction(ft, transactionOptions)
+                if (newBaseFragment != null) {
+                    emptyStackAndReinitializeWithNewBase(ft, newBaseFragment, currentStackIndex)
+                    mCurrentFrag = newBaseFragment
+                    commitTransaction(ft, transactionOptions)
+                } else {
+                    //Attempt to reattach previous fragment
+                    mCurrentFrag = addPreviousFragment(ft, shouldDetachAttachOnSwitch() || shouldRemoveAttachOnSwitch())
+                    commitTransaction(ft, transactionOptions)
+                }
             }
-            mCurrentFrag = fragment
             transactionListener?.onTabTransaction(currentFrag, currentStackIndex)
+
+            destinationFragmentToAdd?.let { pushFragment(it) }
         }
     }
 
@@ -506,6 +526,32 @@ class FragNavController constructor(private val fragmentManger: FragmentManager,
 
             ft.commit()
         }
+    }
+
+    private fun emptyStackAndReinitializeWithNewBase(fragmentTransaction: FragmentTransaction, baseFragment: Fragment, stackIndex: Int) {
+        if (stackIndex == NO_TAB) {
+            return
+        }
+
+        //Grab Current stack
+        val fragmentStack = fragmentStacksTags[stackIndex]
+
+        //Pop all of the fragments on the stack and remove them from the FragmentManager
+        while (fragmentStack.size > 0) {
+            val fragment = fragmentManger.findFragmentByTag(fragmentStack.pop())
+            val ft = fragmentManger.beginTransaction()
+
+            if (fragment != null) {
+                ft.remove(fragment)
+            }
+
+            ft.commit()
+        }
+
+        val rootTag = generateTag(baseFragment)
+        fragmentStacksTags[stackIndex] = Stack()
+        fragmentStacksTags[stackIndex].push(rootTag)
+        fragmentTransaction.addSafe(containerId, baseFragment, rootTag)
     }
 
     /**
