@@ -529,8 +529,7 @@ class FragNavController constructor(private val fragmentManger: FragmentManager,
 
     /**
      * Completely empties the fragment/tag stack at the provided index and removes all fragments,
-     * then reinitializes the stack with the provided fragment
-     * (via [RootFragmentListener.getRootFragment])
+     * then re-initializes the stack with the parameter provided fragment
      *
      * **Note**: This is different than [clearStack], which clears out all the fragments in the
      * stack except for the root. It is also different from [emptyStackAndReinitialize]
