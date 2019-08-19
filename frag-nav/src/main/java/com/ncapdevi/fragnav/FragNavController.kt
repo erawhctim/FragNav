@@ -253,11 +253,26 @@ class FragNavController constructor(private val fragmentManger: FragmentManager,
         switchTabInternal(index, transactionOptions)
     }
 
+    /**
+     * Function used to switch to the specified fragment stack
+     *
+     * @param fragment              The fragment to be used as the new root fragment
+     * @param index              The given index to switch to
+     * @param transactionOptions Transaction options to be displayed
+     * @throws IndexOutOfBoundsException Thrown if trying to switch to an index outside given range
+     */
+    @Throws(IndexOutOfBoundsException::class)
+    @JvmOverloads
+    fun switchTabWithNewRootFragment(fragment: Fragment, @TabIndex index: Int, transactionOptions: FragNavTransactionOptions? = defaultTransactionOptions) {
+        switchTabInternal(index = index, transactionOptions = transactionOptions, newRootFragment = fragment)
+    }
+
     @Throws(IndexOutOfBoundsException::class)
     private fun switchTabInternal(
         @TabIndex index: Int,
         transactionOptions: FragNavTransactionOptions?,
-        allowSwitchingToCurrentIndex: Boolean = false
+        allowSwitchingToCurrentIndex: Boolean = false,
+        newRootFragment: Fragment? = null
     ) {
         //Check to make sure the tab is within range
         if (index >= fragmentStacksTags.size) {
@@ -276,15 +291,19 @@ class FragNavController constructor(private val fragmentManger: FragmentManager,
 
             fragNavTabHistoryController.switchTab(index)
 
-            var fragment: Fragment? = null
             if (index == NO_TAB) {
                 commitTransaction(ft, transactionOptions)
             } else {
-                //Attempt to reattach previous fragment
-                fragment = addPreviousFragment(ft, shouldDetachAttachOnSwitch() || shouldRemoveAttachOnSwitch())
-                commitTransaction(ft, transactionOptions)
+                if (newRootFragment != null) {
+                    emptyStackAndReinitializeWithNewBase(ft, newRootFragment, currentStackIndex)
+                    mCurrentFrag = newRootFragment
+                    commitTransaction(ft, transactionOptions)
+                } else {
+                    //Attempt to reattach previous fragment
+                    mCurrentFrag = addPreviousFragment(ft, shouldDetachAttachOnSwitch() || shouldRemoveAttachOnSwitch())
+                    commitTransaction(ft, transactionOptions)
+                }
             }
-            mCurrentFrag = fragment
             transactionListener?.onTabTransaction(currentFrag, currentStackIndex)
         }
     }
