@@ -509,6 +509,43 @@ class FragNavController constructor(private val fragmentManger: FragmentManager,
     }
 
     /**
+     * Completely empties the fragment/tag stack at the provided index and removes all fragments,
+     * then reinitializes the stack with the provided fragment
+     * (via [RootFragmentListener.getRootFragment])
+     *
+     * **Note**: This is different than [clearStack], which clears out all the fragments in the
+     * stack except for the root. It is also different from [emptyStackAndReinitialize]
+     * which clears out all of the fragments but then uses the [getRootFragment] call to initialize
+     * the stack with a root fragment provided by the callback.
+     */
+    fun emptyStackAndReinitializeWithNewBase(fragmentTransaction: FragmentTransaction, baseFragment: Fragment, stackIndex: Int) {
+        if (stackIndex == NO_TAB) {
+            return
+        }
+
+        //Grab Current stack
+        val fragmentStack = fragmentStacksTags[stackIndex]
+
+        //Pop all of the fragments on the stack and remove them from the FragmentManager
+        while (fragmentStack.size > 0) {
+            val fragment = fragmentManger.findFragmentByTag(fragmentStack.pop())
+            val ft = fragmentManger.beginTransaction()
+
+            if (fragment != null) {
+                ft.remove(fragment)
+            }
+
+            ft.commit()
+        }
+
+        val rootTag = generateTag(baseFragment)
+        fragmentStacksTags[stackIndex] = Stack()
+        fragmentStacksTags[stackIndex].push(rootTag)
+        fragmentTransaction.addSafe(containerId, baseFragment, rootTag)
+    }
+
+
+    /**
      * Replace the current fragment
      *
      * @param fragment           the fragment to be shown instead
