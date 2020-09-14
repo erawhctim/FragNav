@@ -824,6 +824,8 @@ class FragNavController constructor(private val fragmentManger: FragmentManager,
                     options.breadCrumbTitle != null -> setBreadCrumbTitle(options.breadCrumbTitle)
                     options.breadCrumbShortTitle != null -> setBreadCrumbShortTitle(options.breadCrumbShortTitle)
                 }
+
+                setReorderingAllowed(options.reordering)
             }
         }
     }
@@ -979,6 +981,8 @@ class FragNavController constructor(private val fragmentManger: FragmentManager,
                 // We cannot use switchTab, because switchTab removes fragment, but we don't want it
                 currentStackIndex = selectedTabIndex
                 fragNavTabHistoryController.switchTab(selectedTabIndex)
+
+                transactionListener?.onTabTransaction(mCurrentFrag, selectedTabIndex)
             }
 
             //Successfully restored state
