@@ -3,7 +3,21 @@
 # FragNav
 Android library for managing multiple stacks of fragments (e.g., [Bottom Navigation ](https://www.google.com/design/spec/components/bottom-navigation.html), [Navigation Drawer](https://www.google.com/design/spec/patterns/navigation-drawer.html)).  This library does NOT include the UI for bottom tab bar layout.  For that, I recommend either [BottomBar](https://github.com/roughike/BottomBar) (which is the library shown in the demo) or [AHBottomNavigation](https://github.com/aurelhubert/ahbottomnavigation). This library helps maintain order after pushing onto and popping from multiple stacks(tabs). It also helps with switching between desired tabs and clearing the stacks.
 
+
 <img src="https://raw.githubusercontent.com/ncapdevi/FragNav/master/FragNavDemo.gif" width="30%" />
+
+## Donations
+Did I help you out, save you some time, make your life easier? Oh, cool. Want to say thanks, buy me a coffee or a beer? HEY THANKS! I appreciate it.
+
+[Cash App](https://cash.me/$NicCapdevila)
+
+[Paypal](https://paypal.me/ncapdevi)
+
+[Venmo](http://www.venmo.com/code?user_id=1774909453762560167)
+
+## Restrictions
+Fragments are maintained in a stack per Android's guideline https://developer.android.com/guide/navigation/navigation-principles#navigation_state_is_represented_as_a_stack_of_destinations . A lot of questions get asked about how to maintain only one instance of a fragment, or to pull out a fragment in the middle of the stack. That is outside Android navigation guidelines, and also this library. You may want to rethink your UX.
+
 
 ## Sample
 With [Material Design Bottom Navigation pattern](https://www.google.com/design/spec/components/bottom-navigation.html), and other tabbed navigation, managing multiple stacks of fragments can be a real headache.  The example file shows best practice for navigating deep within a tab stack.
@@ -11,7 +25,7 @@ With [Material Design Bottom Navigation pattern](https://www.google.com/design/s
 ## Gradle
 
 ```groovy
-implementation 'com.ncapdevi:frag-nav:3.0.0'   //or or `compile` if on older gradle version
+implementation 'com.ncapdevi:frag-nav:3.2.0'   //or or `compile` if on older gradle version
 ```
 
 ## How do I implement it?
@@ -238,6 +252,8 @@ Feel free to send me a pull request with your app and I'll link you here:
 If you have any problems, feel free to create an issue or pull request.
 
 The sample app in the repository uses [BottomBar](https://github.com/roughike/BottomBar) library.
+
+
 
 ## License
 
